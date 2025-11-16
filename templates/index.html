@@ -5,19 +5,26 @@
     <title>割り勘アプリ</title>
 </head>
 <body>
-    <h1>簡単割り勘アプリ</h1>
-    <form method="post">
-        <p>支払った人: <input type="text" name="payer"></p>
-        <p>金額: <input type="number" name="amount"></p>
-        <p>参加者（ , で区切る ）:<br>
-            <input type="text" name="members" placeholder="A,B,C">
-        </p>
-        <button type="submit">計算する</button>
-    </form>
+    <h1>支払い一覧</h1>
 
-    {% if result %}
-        <h2>結果</h2>
-        <p>{{ result }}</p>
-    {% endif %}
+    <a href="/add">＋ 支払いを追加</a> |
+    <a href="/settlement">精算結果を見る</a>
+
+    <h2>支払い履歴</h2>
+    <table border="1" cellpadding="8">
+        <tr>
+            <th>支払った人</th><th>金額</th><th>内容</th>
+        </tr>
+        {% for p in payments %}
+        <tr>
+            <td>{{ p[1] }}</td>
+            <td>{{ p[2] }}円</td>
+            <td>{{ p[3] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h3>合計金額：{{ total }}円</h3>
+
 </body>
 </html>
