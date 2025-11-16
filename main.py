@@ -1,3 +1,5 @@
+# main.py の冒頭部分
+import os # 忘れずに追加
 from fastapi import FastAPI, Request, Form, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -7,20 +9,28 @@ from sqlalchemy.orm import sessionmaker, relationship, Session, declarative_base
 from datetime import datetime
 from typing import List
 import math
-import os
 
-# --- Database Setup ---
-# RenderのDiskマウントパスを指定
-DISK_PATH = "/var/data/warikan.db" 
-DATABASE_URL = f"sqlite:///{DISK_PATH}"
+# --- Database Setup (Modified for Render) ---
 
-# データベースファイルの親ディレクトリが存在しない場合に作成する
-db_dir = os.path.dirname(DISK_PATH)
-if not os.path.exists(db_dir):
-    os.makedirs(db_dir, exist_ok=True)
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+# 環境変数からURLを取得（Render上では設定したURLが、ローカルではNoneが入る）
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+# RenderのURLは "postgres://" で始まるが、SQLAlchemyは "postgresql://" を必要とするため修正
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# 環境変数がない（ローカル環境）ならSQLiteを使う
+if not DATABASE_URL:
+    DATABASE_URL = "sqlite:///./warikan.db"
+
+# SQLiteの場合のみ check_same_thread が必要
+connect_args = {"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
+
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
+# ... (以下、 expense_targets = Table ... から下のコードは変更なし) ...
 
 # 中間テーブル（割り勘の対象メンバー）
 expense_targets = Table(
