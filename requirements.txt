@@ -3,4 +3,4 @@ uvicorn
 sqlalchemy
 jinja2
 python-multipart
-psycopg2-binary  <-- これを追加！
+psycopg2-binary  
