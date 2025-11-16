@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>割り勘アプリ</title>
+</head>
+<body>
+    <h1>簡単割り勘アプリ</h1>
+    <form method="post">
+        <p>支払った人: <input type="text" name="payer"></p>
+        <p>金額: <input type="number" name="amount"></p>
+        <p>参加者（ , で区切る ）:<br>
+            <input type="text" name="members" placeholder="A,B,C">
+        </p>
+        <button type="submit">計算する</button>
+    </form>
+
+    {% if result %}
+        <h2>結果</h2>
+        <p>{{ result }}</p>
+    {% endif %}
+</body>
+</html>
