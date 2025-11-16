@@ -7,9 +7,17 @@ from sqlalchemy.orm import sessionmaker, relationship, Session, declarative_base
 from datetime import datetime
 from typing import List
 import math
+import os
 
 # --- Database Setup ---
-DATABASE_URL = "sqlite:///./warikan.db"
+# RenderのDiskマウントパスを指定
+DISK_PATH = "/var/data/warikan.db" 
+DATABASE_URL = f"sqlite:///{DISK_PATH}"
+
+# データベースファイルの親ディレクトリが存在しない場合に作成する
+db_dir = os.path.dirname(DISK_PATH)
+if not os.path.exists(db_dir):
+    os.makedirs(db_dir, exist_ok=True)
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
