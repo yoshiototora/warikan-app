@@ -41,6 +41,48 @@
     </form>
 </section>
 
+<section class="card">
+    <h4>📊 精算サマリー</h4>
+    <p><strong>グループ合計支出: ¥{{ "{:,.0f}".format(total_group_spend) }}</strong></p>
+    
+    <table role="grid">
+        <thead>
+            <tr>
+                <th>メンバー</th>
+                <th>支払った額</th>
+                <th>負担すべき額</th>
+                <th>差額 ( +/- )</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for member_id, data in settlement.items() %}
+            <tr>
+                <td><strong>{{ data.name }}</strong></td>
+                <td>¥{{ "{:,.0f}".format(data.paid) }}</td>
+                <td>¥{{ "{:,.0f}".format(data.owed) }}</td>
+                
+                {% set balance = data.balance %}
+                <td style="color: {{ 'green' if balance > 0 else ('red' if balance < 0 else 'black') }}; font-weight: bold;">
+                    
+                    {% if balance > 0 %}+{% endif %}{{ "{:,.0f}".format(balance) }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <details open> <summary><strong>具体的な精算方法 (最小回数)</strong></summary>
+        {% if transactions %}
+            <ul>
+                {% for tx in transactions %}
+                    <li>{{ tx }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>精算は完了しています。</p>
+        {% endif %}
+    </details>
+</section>
 <section>
     <h3>履歴一覧</h3>
     {% if group.expenses %}
