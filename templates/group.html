@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header>
+    <h2>{{ group.name }}</h2>
+    <p>メンバー: {% for m in group.members %}{{ m.name }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+</header>
+
+<section class="card">
+    <h4>➕ 立替を記録する</h4>
+    <form action="/groups/{{ group.id }}/expenses" method="post">
+        <div class="grid">
+            <div>
+                <label for="description">内容</label>
+                <input type="text" name="description" placeholder="例: ランチ代" required>
+            </div>
+            <div>
+                <label for="amount">金額 (円)</label>
+                <input type="number" name="amount" placeholder="3000" required>
+            </div>
+        </div>
+
+        <label for="payer_id">誰が払った？</label>
+        <select name="payer_id" required>
+            {% for member in group.members %}
+                <option value="{{ member.id }}">{{ member.name }}</option>
+            {% endfor %}
+        </select>
+
+        <label>誰の分？ (複数選択可)</label>
+        <div class="grid">
+            {% for member in group.members %}
+            <label>
+                <input type="checkbox" name="target_ids" value="{{ member.id }}" checked>
+                {{ member.name }}
+            </label>
+            {% endfor %}
+        </div>
+
+        <button type="submit" style="margin-top: 1rem;">登録する</button>
+    </form>
+</section>
+
+<section>
+    <h3>履歴一覧</h3>
+    {% if group.expenses %}
+        <table role="grid">
+            <thead>
+                <tr>
+                    <th>内容</th>
+                    <th>金額</th>
+                    <th>支払者</th>
+                    <th>対象</th>
+                    <th>日時</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for expense in group.expenses %}
+                <tr>
+                    <td>{{ expense.description }}</td>
+                    <td>¥{{ "{:,}".format(expense.amount) }}</td>
+                    <td><strong>{{ expense.payer.name }}</strong></td>
+                    <td>
+                        <small>
+                        {% for target in expense.targets %}
+                            {{ target.name }}{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                        </small>
+                    </td>
+                    <td><small>{{ expense.created_at.strftime('%m/%d %H:%M') }}</small></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>まだ立替記録がありません。</p>
+    {% endif %}
+</section>
+
+<a href="/" role="button" class="secondary outline">← グループ一覧に戻る</a>
+{% endblock %}
