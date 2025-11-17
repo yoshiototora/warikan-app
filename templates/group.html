@@ -3,10 +3,29 @@
 {% block content %}
 <header>
     <h2>{{ group.name }}</h2>
-    <p>メンバー: {% for m in group.members %}{{ m.name }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
 </header>
 
-<section class="card">
+<section class="grid">
+    <article>
+        <h6>現在のメンバー</h6>
+        <ul>
+            {% for m in group.members %}
+                <li>{{ m.name }}</li>
+            {% endfor %}
+        </ul>
+    </article>
+    
+    <article>
+        <h6>メンバーを追加</h6>
+        <form action="/groups/{{ group.id }}/members" method="post">
+            <label for="name" class="visually-hidden">メンバー名</label>
+            <input type="text" id="name" name="name" placeholder="新しい名前" required>
+            <button type="submit">追加</button>
+        </form>
+    </article>
+</section>
+
+<hr> <section class="card">
     <h4>➕ 立替を記録する</h4>
     <form action="/groups/{{ group.id }}/expenses" method="post">
         <div class="grid">
@@ -40,6 +59,7 @@
         <button type="submit" style="margin-top: 1rem;">登録する</button>
     </form>
 </section>
+
 
 <section class="card">
     <h4>📊 精算サマリー</h4>
@@ -83,6 +103,8 @@
         {% endif %}
     </details>
 </section>
+
+
 <section>
     <h3>履歴一覧</h3>
     {% if group.expenses %}
@@ -94,6 +116,7 @@
                     <th>支払者</th>
                     <th>対象</th>
                     <th>日時</th>
+                    <th>操作</th>
                 </tr>
             </thead>
             <tbody>
@@ -110,6 +133,19 @@
                         </small>
                     </td>
                     <td><small>{{ expense.created_at.strftime('%m/%d %H:%M') }}</small></td>
+                    
+                    <td style="display: flex; gap: 0.5rem; align-items: center;">
+                        <a href="/expenses/{{ expense.id }}/edit"
+                           role="button"
+                           class="primary outline"
+                           style="padding: 0.2rem 0.5rem; margin:0; font-size: 0.8rem;">編集</a>
+
+                        <a href="/expenses/{{ expense.id }}/delete" 
+                           onclick="return confirm('「{{ expense.description }} (¥{{ "{:,}".format(expense.amount) }})」を本当に削除しますか？');" 
+                           role="button" 
+                           class="secondary outline" 
+                           style="padding: 0.2rem 0.5rem; margin:0; font-size: 0.8rem;">削除</a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

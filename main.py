@@ -227,3 +227,100 @@ def add_expense(
     db.commit()
     
     return RedirectResponse(url=f"/groups/{group_id}", status_code=303)
+
+#
+# main.py の一番下に追加
+#
+
+@app.post("/groups/{group_id}/members")
+def add_member(
+    group_id: int,
+    name: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    """グループに新しいメンバーを追加する"""
+    group = db.query(Group).filter(Group.id == group_id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    # すでに同名のメンバーがいないかチェック
+    existing = db.query(Member).filter_by(group_id=group_id, name=name.strip()).first()
+    if not existing and name.strip(): # 空白でなく、重複もない場合
+        new_member = Member(name=name.strip(), group_id=group_id)
+        db.add(new_member)
+        db.commit()
+    
+    return RedirectResponse(url=f"/groups/{group_id}", status_code=303)
+
+
+@app.get("/expenses/{expense_id}/delete")
+def delete_expense(expense_id: int, db: Session = Depends(get_db)):
+    """立替履歴を削除する"""
+    expense = db.query(Expense).filter(Expense.id == expense_id).first()
+    if not expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    
+    group_id = expense.group_id # リダイレクト先を確保
+    
+    # 支払い情報を削除
+    db.delete(expense)
+    db.commit()
+    
+    # 元のグループページに戻る
+    return RedirectResponse(url=f"/groups/{group_id}", status_code=303)
+
+#
+# main.py の一番下に追加
+#
+
+@app.get("/expenses/{expense_id}/edit")
+def edit_expense_form(
+    request: Request,
+    expense_id: int,
+    db: Session = Depends(get_db)
+):
+    """編集フォームのページを表示する (GET)"""
+    expense = db.query(Expense).filter(Expense.id == expense_id).first()
+    if not expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    
+    # テンプレートに渡すため、現在チェックされているメンバーのIDリストを作成
+    current_target_ids = {member.id for member in expense.targets}
+    
+    return templates.TemplateResponse(
+        "edit_expense.html",
+        {
+            "request": request,
+            "expense": expense,
+            "current_target_ids": current_target_ids
+        }
+    )
+
+@app.post("/expenses/{expense_id}/edit")
+def update_expense(
+    expense_id: int,
+    description: str = Form(...),
+    amount: int = Form(...),
+    payer_id: int = Form(...),
+    target_ids: List[int] = Form(...), # フォームから送られたIDリスト
+    db: Session = Depends(get_db)
+):
+    """編集内容を保存する (POST)"""
+    expense = db.query(Expense).filter(Expense.id == expense_id).first()
+    if not expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+
+    # 1. 基本情報を更新
+    expense.description = description
+    expense.amount = amount
+    expense.payer_id = payer_id
+    
+    # 2. 対象メンバー（targets）を更新
+    # フォームから送られてきたIDのリストで、対象メンバーを上書きする
+    targets = db.query(Member).filter(Member.id.in_(target_ids)).all()
+    expense.targets = targets
+    
+    db.commit()
+    
+    # 元のグループページに戻る
+    return RedirectResponse(url=f"/groups/{expense.group_id}", status_code=303)
